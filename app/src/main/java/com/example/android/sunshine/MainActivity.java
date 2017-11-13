@@ -21,7 +21,11 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 
+import com.example.android.sunshine.data.SunshinePreferences;
 import com.example.android.sunshine.utilities.NetworkUtils;
+import com.example.android.sunshine.utilities.OpenWeatherJsonUtils;
+
+import org.json.JSONException;
 
 import java.io.IOException;
 import java.net.URL;
@@ -42,35 +46,45 @@ public class MainActivity extends AppCompatActivity {
          */
         mWeatherTextView = findViewById(R.id.tv_weather_data);
 
-        loadWeatherData("Moscow");
+        loadWeatherData();
 
     }
 
     @SuppressWarnings("SameParameterValue")
-    private void loadWeatherData(String location) {
-        if (location != null && !location.equals("")) {
-            URL url = NetworkUtils.buildUrl(location);
-            new WeatherQueryTask().execute(url);
-        }
+    private void loadWeatherData() {
+        String location = SunshinePreferences.getPreferredWeatherLocation(getBaseContext());
+        new FetchWeatherTask().execute(location);
     }
 
     @SuppressLint("StaticFieldLeak")
-    private class WeatherQueryTask extends AsyncTask<URL, Void, String> {
+    private class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
         @Override
-        protected String doInBackground(URL... urls) {
-            String weatherResults = null;
+        protected String[] doInBackground(String... location) {
+            if (location.length == 0) {
+                return null;
+            }
+            URL url = NetworkUtils.buildUrl(location[0]);
+            String[] weatherResults = null;
             try {
-                weatherResults = NetworkUtils.getResponseFromHttpUrl(urls[0]);
+                if (url != null) {
+                    String jsonResponse = NetworkUtils.getResponseFromHttpUrl(url);
+                    weatherResults = OpenWeatherJsonUtils.getSimpleWeatherStringsFromJson(getBaseContext(), jsonResponse);
+                }
+
             } catch (IOException ioe) {
                 ioe.printStackTrace();
+            } catch (JSONException je) {
+                je.printStackTrace();
             }
             return weatherResults;
         }
 
         @Override
-        protected void onPostExecute(String s) {
-            if (s != null && !s.equals("")) {
-                mWeatherTextView.setText(s);
+        protected void onPostExecute(String[] weatherData) {
+            if (weatherData != null && weatherData.length != 0) {
+                for (String weather : weatherData) {
+                    mWeatherTextView.append(weather + "\n\n\n");
+                }
             }
         }
     }
