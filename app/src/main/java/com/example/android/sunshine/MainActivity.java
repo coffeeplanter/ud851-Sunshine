@@ -50,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    @SuppressWarnings("SameParameterValue")
     private void loadWeatherData() {
         String location = SunshinePreferences.getPreferredWeatherLocation(getBaseContext());
         new FetchWeatherTask().execute(location);
