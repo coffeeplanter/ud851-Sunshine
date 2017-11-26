@@ -226,11 +226,13 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapterOn
     }
 
     private void openMap() {
-        String uriTemplate = "geo:0,0";
+        String uriTemplate = "geo:";
         Uri uri = Uri.parse(uriTemplate);
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(uri);
-        startActivity(intent);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        }
     }
 
 }
