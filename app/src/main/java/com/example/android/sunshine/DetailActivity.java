@@ -2,7 +2,11 @@ package com.example.android.sunshine;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.ShareCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.TextView;
 
 public class DetailActivity extends AppCompatActivity {
@@ -17,7 +21,7 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        mWeatherDisplay = (TextView) findViewById(R.id.tv_display_weather);
+        mWeatherDisplay = findViewById(R.id.tv_display_weather);
 
         Intent intentThatStartedThisActivity = getIntent();
 
@@ -29,6 +33,33 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
-    // TODO (3) Create a menu with an item with id of action_share
-    // TODO (4) Display the menu and implement the forecast sharing functionality
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.details, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_share) {
+            shareDayForecast();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void shareDayForecast() {
+        if (mForecast != null) {
+            String mimeType = "text/plain";
+            String chooserTitle = "Share the Weather";
+            ShareCompat.IntentBuilder
+                    .from(this)
+                    .setType(mimeType)
+                    .setChooserTitle(chooserTitle)
+                    .setText(mForecast)
+                    .startChooser();
+        }
+    }
+
 }

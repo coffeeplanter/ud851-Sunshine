@@ -58,10 +58,10 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapterOn
          * Using findViewById, we get a reference to our RecyclerView from xml. This allows us to
          * do things like set the adapter of the RecyclerView and toggle the visibility.
          */
-        mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_forecast);
+        mRecyclerView = findViewById(R.id.recyclerview_forecast);
 
         /* This TextView is used to display errors and will be hidden if there are no errors */
-        mErrorMessageDisplay = (TextView) findViewById(R.id.tv_error_message_display);
+        mErrorMessageDisplay = findViewById(R.id.tv_error_message_display);
 
         /*
          * LinearLayoutManager can support HORIZONTAL or VERTICAL orientations. The reverse layout
@@ -178,10 +178,8 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapterOn
                 String jsonWeatherResponse = NetworkUtils
                         .getResponseFromHttpUrl(weatherRequestUrl);
 
-                String[] simpleJsonWeatherData = OpenWeatherJsonUtils
+                return OpenWeatherJsonUtils
                         .getSimpleWeatherStringsFromJson(MainActivity.this, jsonWeatherResponse);
-
-                return simpleJsonWeatherData;
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -214,15 +212,25 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapterOn
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-
-        if (id == R.id.action_refresh) {
-            mForecastAdapter.setWeatherData(null);
-            loadWeatherData();
-            return true;
+        switch (id) {
+            case R.id.action_refresh:
+                mForecastAdapter.setWeatherData(null);
+                loadWeatherData();
+                return true;
+            case R.id.action_open_map:
+                openMap();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-
-        // TODO (2) Launch the map when the map menu item is clicked
-
-        return super.onOptionsItemSelected(item);
     }
+
+    private void openMap() {
+        String uriTemplate = "geo:0,0";
+        Uri uri = Uri.parse(uriTemplate);
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(uri);
+        startActivity(intent);
+    }
+
 }
