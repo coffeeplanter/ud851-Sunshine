@@ -18,7 +18,7 @@ public class DetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_detail);
         weatherForDay = findViewById(R.id.weather_for_day);
         Intent intent = getIntent();
-        if (intent.hasExtra(Intent.EXTRA_TEXT)) {
+        if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
             String weather = intent.getStringExtra(Intent.EXTRA_TEXT);
             weatherForDay.setText(weather);
         }
