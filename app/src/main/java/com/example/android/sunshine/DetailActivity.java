@@ -8,6 +8,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+@SuppressWarnings({"SpellCheckingInspection", "FieldCanBeLocal"})
 public class DetailActivity extends AppCompatActivity {
 
     private static final String FORECAST_SHARE_HASHTAG = " #SunshineApp";
@@ -20,7 +21,7 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        mWeatherDisplay = (TextView) findViewById(R.id.tv_display_weather);
+        mWeatherDisplay = findViewById(R.id.tv_display_weather);
 
         Intent intentThatStartedThisActivity = getIntent();
 
@@ -40,11 +41,10 @@ public class DetailActivity extends AppCompatActivity {
      * @return The Intent to use to start our share.
      */
     private Intent createShareForecastIntent() {
-        Intent shareIntent = ShareCompat.IntentBuilder.from(this)
+        return ShareCompat.IntentBuilder.from(this)
                 .setType("text/plain")
                 .setText(mForecast + FORECAST_SHARE_HASHTAG)
                 .getIntent();
-        return shareIntent;
     }
 
     @Override
@@ -55,5 +55,13 @@ public class DetailActivity extends AppCompatActivity {
         return true;
     }
 
-    // TODO (7) Launch SettingsActivity when the Settings option is clicked
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
 }
