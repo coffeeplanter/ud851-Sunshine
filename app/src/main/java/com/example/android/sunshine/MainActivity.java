@@ -15,10 +15,13 @@
  */
 package com.example.android.sunshine;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
@@ -41,7 +44,7 @@ import java.net.URL;
 
 public class MainActivity extends AppCompatActivity implements
         ForecastAdapter.ForecastAdapterOnClickHandler,
-        // TODO (3) Implement OnSharedPreferenceChangeListener on MainActivity
+        SharedPreferences.OnSharedPreferenceChangeListener,
         LoaderCallbacks<String[]> {
 
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -55,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private static final int FORECAST_LOADER_ID = 0;
 
-    // TODO (4) Add a private static boolean flag for preference updates and initialize it to false
+    private static boolean sharedPreferencesUpdated = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,10 +69,10 @@ public class MainActivity extends AppCompatActivity implements
          * Using findViewById, we get a reference to our RecyclerView from xml. This allows us to
          * do things like set the adapter of the RecyclerView and toggle the visibility.
          */
-        mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_forecast);
+        mRecyclerView = findViewById(R.id.recyclerview_forecast);
 
         /* This TextView is used to display errors and will be hidden if there are no errors */
-        mErrorMessageDisplay = (TextView) findViewById(R.id.tv_error_message_display);
+        mErrorMessageDisplay = findViewById(R.id.tv_error_message_display);
 
         /*
          * A LinearLayoutManager is responsible for measuring and positioning item views within a
@@ -114,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements
          * Please note: This so called "ProgressBar" isn't a bar by default. It is more of a
          * circle. We didn't make the rules (or the names of Views), we just follow them.
          */
-        mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
+        mLoadingIndicator = findViewById(R.id.pb_loading_indicator);
 
         /*
          * This ID will uniquely identify the Loader. We can use it, for example, to get a handle
@@ -146,8 +149,22 @@ public class MainActivity extends AppCompatActivity implements
         getSupportLoaderManager().initLoader(loaderId, bundleForLoader, callback);
 
         Log.d(TAG, "onCreate: registering preference changed listener");
+        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
+    }
 
-        // TODO (6) Register MainActivity as a OnSharedPreferenceChangedListener in onCreate
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (sharedPreferencesUpdated) {
+            getSupportLoaderManager().restartLoader(FORECAST_LOADER_ID, null, this);
+            sharedPreferencesUpdated = false;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        PreferenceManager.getDefaultSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);
     }
 
     /**
@@ -158,6 +175,7 @@ public class MainActivity extends AppCompatActivity implements
      *
      * @return Return a new Loader instance that is ready to start loading.
      */
+    @SuppressLint("StaticFieldLeak")
     @Override
     public Loader<String[]> onCreateLoader(int id, final Bundle loaderArgs) {
 
@@ -198,10 +216,8 @@ public class MainActivity extends AppCompatActivity implements
                     String jsonWeatherResponse = NetworkUtils
                             .getResponseFromHttpUrl(weatherRequestUrl);
 
-                    String[] simpleJsonWeatherData = OpenWeatherJsonUtils
+                    return OpenWeatherJsonUtils
                             .getSimpleWeatherStringsFromJson(MainActivity.this, jsonWeatherResponse);
-
-                    return simpleJsonWeatherData;
                 } catch (Exception e) {
                     e.printStackTrace();
                     return null;
@@ -271,8 +287,7 @@ public class MainActivity extends AppCompatActivity implements
      * open the Common Intents page
      */
     private void openLocationInMap() {
-        // TODO (9) Use preferred location rather than a default location to display in the map
-        String addressString = "1600 Ampitheatre Parkway, CA";
+        String addressString = SunshinePreferences.getPreferredWeatherLocation(this);
         Uri geoLocation = Uri.parse("geo:0,0?q=" + addressString);
 
         Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -327,10 +342,6 @@ public class MainActivity extends AppCompatActivity implements
         mErrorMessageDisplay.setVisibility(View.VISIBLE);
     }
 
-    // TODO (7) In onStart, if preferences have been changed, refresh the data and set the flag to false
-
-    // TODO (8) Override onDestroy and unregister MainActivity as a SharedPreferenceChangedListener
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         /* Use AppCompatActivity's method getMenuInflater to get a handle on the menu inflater */
@@ -365,5 +376,9 @@ public class MainActivity extends AppCompatActivity implements
         return super.onOptionsItemSelected(item);
     }
 
-    // TODO (5) Override onSharedPreferenceChanged to set the preferences flag to true
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        sharedPreferencesUpdated = true;
+    }
+
 }
